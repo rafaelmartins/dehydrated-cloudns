@@ -1,0 +1,92 @@
+#!/bin/bash
+
+set -euo pipefail
+
+export LC_ALL=C
+
+
+die() {
+    echo "error: $@"
+    exit 1
+}
+
+
+get_delegated_domain() {
+    local domain="${1}"
+    while test "${domain#*.}" != "${domain}"; do
+        if host -t NS "${domain}" | grep -i "cloudns.net" &> /dev/null; then
+            echo "${domain}"
+            return 0
+        else
+            domain="${domain#*.}"
+        fi
+    done
+    return 1
+}
+
+
+get_prefix() {
+    local domain="$(get_delegated_domain ${1})"
+    test -z "${domain}" && return 1
+    test "${domain}" = "${1}" && return 0
+    echo "${1%*.${domain}}"
+}
+
+
+do_request() {
+    test -z "${CLOUDNS_AUTH_ID}" && return 1
+    test -z "${CLOUDNS_AUTH_PASSWORD}" && return 1
+    local args="auth-id=${CLOUDNS_AUTH_ID}&auth-password=${CLOUDNS_AUTH_PASSWORD}&${2}"
+    curl \
+        --silent \
+        "https://api.cloudns.net${1}?${args}"
+}
+
+
+deploy() {
+    local prefix="$(get_prefix ${1})" domain="$(get_delegated_domain ${1})"
+    test -z "${domain}" && return 1
+    do_request \
+        /dns/add-record.json \
+        "domain-name=${domain}&record-type=TXT&host=_acme-challenge${prefix:+.${prefix}}&record=${2}&ttl=60" \
+        | grep -i success &> /dev/null
+    sleep 5
+    while ! do_request /dns/is-updated.json "domain-name=${domain}" | grep -i true &> /dev/null; do
+        sleep 5
+    done
+}
+
+
+clean() {
+    local prefix="$(get_prefix ${1})" domain="$(get_delegated_domain ${1})"
+    test -z "${domain}" && return 1
+    local txt_id=$(
+        do_request \
+            /dns/records.json \
+            "domain-name=${domain}" \
+            | jq -r \
+                "to_entries | map(.value) | .[] | select(.type == \"TXT\" and .host == \"_acme-challenge${prefix:+.${prefix}}\") | .id"
+    )
+    test -z "${txt_id}" && return 1
+    do_request \
+        /dns/delete-record.json \
+        "domain-name=${domain}&record-id=${txt_id}" \
+        | grep -i success &> /dev/null
+}
+
+
+case "${1:-}" in
+    deploy_challenge)
+        echo " + cloudns hook executing: deploy_challenge"
+        deploy "${2}" "${4}"
+        ;;
+    clean_challenge)
+        echo " + cloudns hook executing: clean_challenge"
+        clean "${2}"
+        ;;
+    deploy_cert)
+        ;;
+    *)
+        die "unknown operation"
+        ;;
+esac
