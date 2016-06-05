@@ -91,6 +91,8 @@ case "${1:-}" in
         ;;
     deploy_cert)
         ;;
+    unchanged_cert)
+        ;;
     *)
         die "unknown operation"
         ;;
