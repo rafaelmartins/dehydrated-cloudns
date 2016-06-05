@@ -43,23 +43,29 @@ do_request() {
 }
 
 
-deploy() {
+deploy_challenge() {
+    echo " + cloudns hook executing: deploy_challenge"
     local prefix="$(get_prefix ${1})" domain="$(get_delegated_domain ${1})"
     test -z "${domain}" && return 1
+    echo "  + creating TXT record for ${1}"
     do_request \
         /dns/add-record.json \
         "domain-name=${domain}&record-type=TXT&host=_acme-challenge${prefix:+.${prefix}}&record=${2}&ttl=60" \
         | grep -i success &> /dev/null
+    echo "  + waiting for propagation ..."
     sleep 5
     while ! do_request /dns/is-updated.json "domain-name=${domain}" | grep -i true &> /dev/null; do
-        sleep 5
+        echo "  + waiting for propagation ..."
+        sleep 30
     done
 }
 
 
-clean() {
+clean_challenge() {
+    echo " + cloudns hook executing: clean_challenge"
     local prefix="$(get_prefix ${1})" domain="$(get_delegated_domain ${1})"
     test -z "${domain}" && return 1
+    echo "  + retrieving TXT record for ${1}"
     local txt_id=$(
         do_request \
             /dns/records.json \
@@ -68,6 +74,7 @@ clean() {
                 "to_entries | map(.value) | .[] | select(.type == \"TXT\" and .host == \"_acme-challenge${prefix:+.${prefix}}\") | .id"
     )
     test -z "${txt_id}" && return 1
+    echo "  + cleaning TXT record for ${1}"
     do_request \
         /dns/delete-record.json \
         "domain-name=${domain}&record-id=${txt_id}" \
@@ -77,12 +84,10 @@ clean() {
 
 case "${1:-}" in
     deploy_challenge)
-        echo " + cloudns hook executing: deploy_challenge"
-        deploy "${2}" "${4}"
+        deploy_challenge "${2}" "${4}"
         ;;
     clean_challenge)
-        echo " + cloudns hook executing: clean_challenge"
-        clean "${2}"
+        clean_challenge "${2}"
         ;;
     deploy_cert)
         ;;

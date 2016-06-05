@@ -2,7 +2,7 @@
 
 letsencript.sh hook for ClouDNS.
 
-This script depends on [curl](https://curl.haxx.se/) and [jq](https://stedolan.github.io/jq/).
+This script depends on [bind-tools (host)](http://www.isc.org/software/bind), [curl](https://curl.haxx.se/) and [jq](https://stedolan.github.io/jq/).
 
 To use it, just export environment variables, and make [letsencrypt.sh](https://github.com/lukas2511/letsencrypt.sh) use `hook.sh` as hook:
 
