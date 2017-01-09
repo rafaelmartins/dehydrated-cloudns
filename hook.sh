@@ -93,6 +93,10 @@ case "${1:-}" in
         ;;
     unchanged_cert)
         ;;
+    invalid_challenge)
+        ;;
+    request_failure)
+        ;;
     *)
         die "unknown operation"
         ;;
