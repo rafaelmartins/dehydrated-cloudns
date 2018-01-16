@@ -1,9 +1,8 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 set -euo pipefail
 
 export LC_ALL=C
-
 
 die() {
     echo "error: $@"
@@ -34,12 +33,18 @@ get_prefix() {
 
 
 do_request() {
-    test -z "${CLOUDNS_AUTH_ID}" && return 1
+    CLOUDNS_AUTH_ID="${CLOUDNS_AUTH_ID-}"
+    test -z "${CLOUDNS_AUTH_ID}" && test -z "${CLOUDNS_SUB_AUTH_ID}" && return 1
     test -z "${CLOUDNS_AUTH_PASSWORD}" && return 1
-    local args="auth-id=${CLOUDNS_AUTH_ID}&auth-password=${CLOUDNS_AUTH_PASSWORD}&${2}"
+    local args=""
+    if test -n "${CLOUDNS_AUTH_ID}"; then
+      args="auth-id=${CLOUDNS_AUTH_ID}"
+    else
+      args="sub-auth-id=${CLOUDNS_SUB_AUTH_ID}"
+    fi
+    args="${args}&auth-password=${CLOUDNS_AUTH_PASSWORD}&${2}"
     curl \
         --silent \
-        --show-error \
         "https://api.cloudns.net${1}?${args}"
 }
 
