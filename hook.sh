@@ -81,23 +81,27 @@ clean_challenge() {
         | grep -i success &> /dev/null
 }
 
+invalid_challenge() {
+    # This hook is called if the challenge response has failed, so domain
+    # owners can be aware and act accordingly.
+    local DOMAIN="${1}" RESPONSE="${2}"
+}
 
-case "${1:-}" in
-    deploy_challenge)
-        deploy_challenge "${2}" "${4}"
-        ;;
-    clean_challenge)
-        clean_challenge "${2}"
-        ;;
-    deploy_cert)
-        ;;
-    unchanged_cert)
-        ;;
-    invalid_challenge)
-        ;;
-    request_failure)
-        ;;
-    *)
-        die "unknown operation"
-        ;;
-esac
+startup_hook() {
+  # This hook is called before the cron command to do some initial tasks
+  # (e.g. starting a webserver).
+
+  :
+}
+
+exit_hook() {
+  # This hook is called at the end of the cron command and can be used to
+  # do some final (cleanup or other) tasks.
+
+  :
+}
+
+HANDLER="$1"; shift
+if [[ "${HANDLER}" =~ ^(deploy_challenge|clean_challenge|deploy_cert|unchanged_cert|invalid_challenge|request_failure|startup_hook|exit_hook)$ ]]; then
+  "$HANDLER" "$@"
+fi
