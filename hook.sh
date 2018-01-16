@@ -82,10 +82,26 @@ clean_challenge() {
         | grep -i success &> /dev/null
 }
 
+unchanged_cert() {
+    local DOMAIN="${1}" KEYFILE="${2}" CERTFILE="${3}" FULLCHAINFILE="${4}" CHAINFILE="${5}"
+
+    # This hook is called once for each certificate that is still
+    # valid and therefore wasn't reissued.
+}
+
 invalid_challenge() {
+    local DOMAIN="${1}" RESPONSE="${2}"
+
     # This hook is called if the challenge response has failed, so domain
     # owners can be aware and act accordingly.
-    local DOMAIN="${1}" RESPONSE="${2}"
+}
+
+deploy_cert() {
+    local DOMAIN="${1}" KEYFILE="${2}" CERTFILE="${3}" FULLCHAINFILE="${4}" CHAINFILE="${5}" TIMESTAMP="${6}"
+
+    # This hook is called once for each certificate that has been
+    # produced. Here you might, for instance, copy your new certificates
+    # to service-specific locations and reload the service.
 }
 
 startup_hook() {
