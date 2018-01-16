@@ -9,4 +9,7 @@ To use it, just export environment variables, and make [dehydrated](https://gith
     $ export CLOUDNS_AUTH_ID="<auth-id here>"
     $ export CLOUDNS_AUTH_PASSWORD="<auth-password here>"
 
-Sub-users are not supported.
+Alternatively you can export CLOUDNS_SUB_AUTH_ID instead of CLOUDNS_AUTH_ID to use API sub user:
+
+    $ export CLOUDNS_SUB_AUTH_ID="<sub-auth-id here>"
+    $ export CLOUDNS_AUTH_PASSWORD="<auth-password here>"
