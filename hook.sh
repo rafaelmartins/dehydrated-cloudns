@@ -39,6 +39,7 @@ do_request() {
     local args="auth-id=${CLOUDNS_AUTH_ID}&auth-password=${CLOUDNS_AUTH_PASSWORD}&${2}"
     curl \
         --silent \
+        --show-error \
         "https://api.cloudns.net${1}?${args}"
 }
 
