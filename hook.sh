@@ -5,12 +5,6 @@ set -euo pipefail
 export LC_ALL=C
 
 
-die() {
-    echo "error: $@"
-    exit 1
-}
-
-
 get_delegated_domain() {
     local domain="${1}"
     while test "${domain#*.}" != "${domain}"; do
@@ -89,15 +83,7 @@ case "${1:-}" in
     clean_challenge)
         clean_challenge "${2}"
         ;;
-    deploy_cert)
-        ;;
-    unchanged_cert)
-        ;;
-    invalid_challenge)
-        ;;
-    request_failure)
-        ;;
     *)
-        die "unknown operation"
+        echo "unknown operation: ${1}"
         ;;
 esac
