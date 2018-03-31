@@ -65,14 +65,14 @@ clean_challenge() {
             /dns/records.json \
             "domain-name=${domain}" \
             | jq -r \
-                "to_entries | map(.value) | .[] | select(.type == \"TXT\" and .host == \"_acme-challenge${prefix:+.${prefix}}\" and .record == \"${3}\") | .id"
+                "to_entries | map(.value) | .[] | select(.type == \"TXT\" and .host == \"_acme-challenge${prefix:+.${prefix}}\" and .record == \"${2}\") | .id"
     )
     test -z "${txt_id}" && return 1
     echo "  + cleaning TXT record for ${1}"
-    for i in ${txt_id}; do
+    for record in ${txt_id}; do
         do_request \
             /dns/delete-record.json \
-            "domain-name=${domain}&record-id=${txt_id}" \
+            "domain-name=${domain}&record-id=${record}" \
             | grep -i success &> /dev/null
     done
 }
@@ -83,9 +83,6 @@ case "${1:-}" in
         deploy_challenge "${2}" "${4}"
         ;;
     clean_challenge)
-        clean_challenge "${2}"
-        ;;
-    *)
-        echo "unknown operation: ${1}"
+        clean_challenge "${2}" "${4}"
         ;;
 esac
