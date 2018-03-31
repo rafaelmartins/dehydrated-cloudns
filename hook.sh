@@ -65,7 +65,7 @@ clean_challenge() {
             /dns/records.json \
             "domain-name=${domain}" \
             | jq -r \
-                "to_entries | map(.value) | .[] | select(.type == \"TXT\" and .host == \"_acme-challenge${prefix:+.${prefix}}\") | .id"
+                "to_entries | map(.value) | .[] | select(.type == \"TXT\" and .host == \"_acme-challenge${prefix:+.${prefix}}\" and .record == \"${3}\") | .id"
     )
     test -z "${txt_id}" && return 1
     echo "  + cleaning TXT record for ${1}"
