@@ -51,7 +51,7 @@ deploy_challenge() {
     echo "  + creating TXT record for ${1}"
     do_request \
         /dns/add-record.json \
-        "domain-name=${domain}&record-type=TXT&host=_acme-challenge${prefix:+.${prefix}}&record=${3}&ttl=60" \
+        "domain-name=${domain}&record-type=TXT&host=_acme-challenge${prefix:+.${prefix}}&record=${2}&ttl=60" \
         | grep -i success &> /dev/null
     echo "  + waiting for propagation ..."
     sleep 5
