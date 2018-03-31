@@ -4,11 +4,6 @@ set -euo pipefail
 
 export LC_ALL=C
 
-die() {
-    echo "error: $@"
-    exit 1
-}
-
 
 get_delegated_domain() {
     local domain="${1}"
@@ -77,53 +72,24 @@ clean_challenge() {
             /dns/records.json \
             "domain-name=${domain}" \
             | jq -r \
-                "to_entries | map(.value) | .[] | select(.type == \"TXT\" and .host == \"_acme-challenge${prefix:+.${prefix}}\") | .id"
+                "to_entries | map(.value) | .[] | select(.type == \"TXT\" and .host == \"_acme-challenge${prefix:+.${prefix}}\" and .record == \"${2}\") | .id"
     )
     test -z "${txt_id}" && return 1
     echo "  + cleaning TXT record for ${1}"
-    do_request \
-        /dns/delete-record.json \
-        "domain-name=${domain}&record-id=${txt_id}" \
-        | grep -i success &> /dev/null
+    for record in ${txt_id}; do
+        do_request \
+            /dns/delete-record.json \
+            "domain-name=${domain}&record-id=${record}" \
+            | grep -i success &> /dev/null
+    done
 }
 
-unchanged_cert() {
-    local DOMAIN="${1}" KEYFILE="${2}" CERTFILE="${3}" FULLCHAINFILE="${4}" CHAINFILE="${5}"
 
-    # This hook is called once for each certificate that is still
-    # valid and therefore wasn't reissued.
-}
-
-invalid_challenge() {
-    local DOMAIN="${1}" RESPONSE="${2}"
-
-    # This hook is called if the challenge response has failed, so domain
-    # owners can be aware and act accordingly.
-}
-
-deploy_cert() {
-    local DOMAIN="${1}" KEYFILE="${2}" CERTFILE="${3}" FULLCHAINFILE="${4}" CHAINFILE="${5}" TIMESTAMP="${6}"
-
-    # This hook is called once for each certificate that has been
-    # produced. Here you might, for instance, copy your new certificates
-    # to service-specific locations and reload the service.
-}
-
-startup_hook() {
-  # This hook is called before the cron command to do some initial tasks
-  # (e.g. starting a webserver).
-
-  :
-}
-
-exit_hook() {
-  # This hook is called at the end of the cron command and can be used to
-  # do some final (cleanup or other) tasks.
-
-  :
-}
-
-HANDLER="$1"; shift
-if [[ "${HANDLER}" =~ ^(deploy_challenge|clean_challenge|deploy_cert|unchanged_cert|invalid_challenge|request_failure|startup_hook|exit_hook)$ ]]; then
-  "$HANDLER" "$@"
-fi
+case "${1:-}" in
+    deploy_challenge)
+        deploy_challenge "${2}" "${4}"
+        ;;
+    clean_challenge)
+        clean_challenge "${2}" "${4}"
+        ;;
+esac
