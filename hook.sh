@@ -69,10 +69,12 @@ clean_challenge() {
     )
     test -z "${txt_id}" && return 1
     echo "  + cleaning TXT record for ${1}"
-    do_request \
-        /dns/delete-record.json \
-        "domain-name=${domain}&record-id=${txt_id}" \
-        | grep -i success &> /dev/null
+    for i in ${txt_id}; do
+        do_request \
+            /dns/delete-record.json \
+            "domain-name=${domain}&record-id=${txt_id}" \
+            | grep -i success &> /dev/null
+    done
 }
 
 
