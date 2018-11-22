@@ -37,7 +37,7 @@ do_request() {
 }
 
 
-deploy_challenge() {
+_deploy_challenge() {
     echo " + cloudns hook executing: deploy_challenge"
     local prefix="$(get_prefix ${1})" domain="$(get_delegated_domain ${1})"
     test -z "${domain}" && return 1
@@ -46,16 +46,21 @@ deploy_challenge() {
         /dns/add-record.json \
         "domain-name=${domain}&record-type=TXT&host=_acme-challenge${prefix:+.${prefix}}&record=${2}&ttl=60" \
         | grep -i success &> /dev/null
-    echo "  + waiting for propagation ..."
-    sleep 5
+}
+
+
+_wait_propagation() {
+    echo " + cloudns hook executing: wait_propagation"
+    local domain="$(get_delegated_domain ${1})"
+    echo "  + waiting for propagation: ${1} "
     while ! do_request /dns/is-updated.json "domain-name=${domain}" | grep -i true &> /dev/null; do
-        echo "  + waiting for propagation ..."
+        echo "   + waiting ..."
         sleep 30
     done
 }
 
 
-clean_challenge() {
+_clean_challenge() {
     echo " + cloudns hook executing: clean_challenge"
     local prefix="$(get_prefix ${1})" domain="$(get_delegated_domain ${1})"
     test -z "${domain}" && return 1
@@ -78,11 +83,38 @@ clean_challenge() {
 }
 
 
-case "${1:-}" in
+deploy_challenge() {
+    while test $# -ne 0; do
+        _deploy_challenge "${1}" "${3}"
+        shift; shift; shift
+    done
+}
+
+
+wait_propagation() {
+    while test $# -ne 0; do
+        _wait_propagation "${1}"
+        shift; shift; shift
+    done
+}
+
+
+clean_challenge() {
+    while test $# -ne 0; do
+        _clean_challenge "${1}" "${3}"
+        shift; shift; shift
+    done
+}
+
+
+HANDLER="${1:-}"
+shift
+case "${HANDLER}" in
     deploy_challenge)
-        deploy_challenge "${2}" "${4}"
+        deploy_challenge "${@}"
+        wait_propagation "${@}"
         ;;
     clean_challenge)
-        clean_challenge "${2}" "${4}"
+        clean_challenge "${@}"
         ;;
 esac
