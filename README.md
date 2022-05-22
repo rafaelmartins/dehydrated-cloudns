@@ -1,5 +1,7 @@
 # dehydrated-cloudns
 
+**WARNING: I don't have access to ClouDNS API anymore, as I moved to a different provider, and API access is part of the paid plans. This should be considered unmaintained.**
+
 [dehydrated](https://github.com/lukas2511/dehydrated) hook for ClouDNS.
 
 This script depends on [bind-tools (host)](http://www.isc.org/software/bind), [curl](https://curl.haxx.se/) and [jq](https://stedolan.github.io/jq/).
